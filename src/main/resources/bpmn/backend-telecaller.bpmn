@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1q38n1n" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.42.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.8.0">
+  <bpmn:collaboration id="Identified_dependency">
+    <bpmn:extensionElements>
+      <zeebe:properties />
+    </bpmn:extensionElements>
+    <bpmn:participant id="BackendTelecallerCamunda" name="Telecaller Task Assignment &#38; Closure" processRef="backend-telecaller" />
+  </bpmn:collaboration>
+  <bpmn:process id="backend-telecaller" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1ejh7ru">
+      <bpmn:lane id="Lane_0_backendteam" name="Backend Team">
+        <bpmn:flowNodeRef>Activity_0xqovkk</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>cust_depend_iden</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_0js96kc</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_1yeup1d</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_1j3hhun</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_1hscp6h</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_1f4bdrb</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_0Telecaller" name="Telecaller">
+        <bpmn:flowNodeRef>Activity_1n520ti</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_09dgyor</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_0fa46gp</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:userTask id="Activity_1n520ti" name="Agent Calim and complete the task given">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:taskListeners>
+          <zeebe:taskListener eventType="creating" type="task-persist-listener" />
+        </zeebe:taskListeners>
+        <zeebe:taskSchedule dueDate="=dueDate" />
+        <zeebe:priorityDefinition priority="=priority" />
+        <zeebe:assignmentDefinition assignee="=userid" candidateGroups="=group" />
+        <zeebe:ioMapping>
+          <zeebe:input source="=string(date and time(dueDate) - @&#34;PT2H&#34;)" target="mydueDate" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1477qka</bpmn:incoming>
+      <bpmn:incoming>Flow_1caxl0r</bpmn:incoming>
+      <bpmn:outgoing>Flow_0fr91ex</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_0js96kc" name="Assign a New Task to Agent">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:taskListeners>
+          <zeebe:taskListener eventType="creating" type="task-persist-listener" />
+        </zeebe:taskListeners>
+        <zeebe:taskSchedule dueDate="=dueDate" followUpDate="=date and time(dueDate) + duration(&#34;PT24H&#34;)" />
+        <zeebe:priorityDefinition priority="=priority" />
+        <zeebe:assignmentDefinition assignee="=userid" candidateGroups="=group" />
+        <zeebe:ioMapping>
+          <zeebe:input source="=createdBy" target="createdBy" />
+          <zeebe:input source="=string(date and time(dueDate) - @&#34;PT2H&#34;)" target="mydueDate" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0wxl65p</bpmn:incoming>
+      <bpmn:outgoing>Flow_1477qka</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_1j3hhun" name="Backend User Review and Close/Reassign Task" default="Flow_1vmy7eg">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:assignmentDefinition assignee="=userid" candidateGroups="=group" />
+        <zeebe:taskSchedule dueDate="=dueDate" />
+        <zeebe:ioMapping>
+          <zeebe:output source="=taskStatus" target="taskStatus" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0fr91ex</bpmn:incoming>
+      <bpmn:outgoing>Flow_1vmy7eg</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="Event_09dgyor" cancelActivity="false" attachedToRef="Activity_1n520ti">
+      <bpmn:outgoing>Flow_1o3ltai</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1ptvulg">
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">=mydueDate</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="Event_1yeup1d" cancelActivity="false" attachedToRef="Activity_0js96kc">
+      <bpmn:outgoing>Flow_0iaectm</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1fwt65o">
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">=mydueDate</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_0fr91ex" sourceRef="Activity_1n520ti" targetRef="Activity_1j3hhun" />
+    <bpmn:sequenceFlow id="Flow_0iaectm" sourceRef="Event_1yeup1d" targetRef="Activity_0xqovkk" />
+    <bpmn:sequenceFlow id="Flow_0wxl65p" sourceRef="cust_depend_iden" targetRef="Activity_0js96kc" />
+    <bpmn:sequenceFlow id="Flow_1477qka" sourceRef="Activity_0js96kc" targetRef="Activity_1n520ti" />
+    <bpmn:sequenceFlow id="Flow_1caxl0r" sourceRef="Gateway_1hscp6h" targetRef="Activity_1n520ti">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=if lower case( trim(taskStatus))="reopen" then true else false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1o3ltai" sourceRef="Event_09dgyor" targetRef="Activity_0fa46gp" />
+    <bpmn:sequenceFlow id="Flow_1vmy7eg" sourceRef="Activity_1j3hhun" targetRef="Gateway_1hscp6h" />
+    <bpmn:sequenceFlow id="Flow_FinalDependencyNotFound" sourceRef="Gateway_1hscp6h" targetRef="Event_1f4bdrb">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=if lower case( trim(taskStatus))="closed" then true else false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="Gateway_1hscp6h">
+      <bpmn:incoming>Flow_1vmy7eg</bpmn:incoming>
+      <bpmn:outgoing>Flow_FinalDependencyNotFound</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1caxl0r</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Activity_0xqovkk" name="send-notification">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-notification" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0iaectm</bpmn:incoming>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Activity_0fa46gp" name="send-reminder">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-notification" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1o3ltai</bpmn:incoming>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Event_1f4bdrb" name="Task Completed">
+      <bpmn:incoming>Flow_FinalDependencyNotFound</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:startEvent id="cust_depend_iden" name="Task Initiate">
+      <bpmn:outgoing>Flow_0wxl65p</bpmn:outgoing>
+    </bpmn:startEvent>
+  </bpmn:process>
+  <bpmn:message id="Message_05dfnm5" name="backendForm">
+    <bpmn:extensionElements>
+      <zeebe:subscription correlationKey="=businessKey" />
+    </bpmn:extensionElements>
+  </bpmn:message>
+  <bpmn:message id="Message_3fq9bp0" name="agentForm">
+    <bpmn:extensionElements>
+      <zeebe:subscription correlationKey="=businessKey" />
+    </bpmn:extensionElements>
+  </bpmn:message>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Identified_dependency">
+      <bpmndi:BPMNShape id="Participant_14xjtyl_di" bpmnElement="BackendTelecallerCamunda" isHorizontal="true">
+        <dc:Bounds x="153" y="82" width="1005" height="668" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_0d3rgjp_di" bpmnElement="Lane_0Telecaller" isHorizontal="true">
+        <dc:Bounds x="183" y="457" width="975" height="293" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_0cdnoic_di" bpmnElement="Lane_0_backendteam" isHorizontal="true">
+        <dc:Bounds x="183" y="82" width="975" height="375" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0fa46gp_di" bpmnElement="Activity_0fa46gp">
+        <dc:Bounds x="870" y="610" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0xqovkk_di" bpmnElement="Activity_0xqovkk">
+        <dc:Bounds x="830" y="288" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1q9q3ue_di" bpmnElement="Activity_0js96kc">
+        <dc:Bounds x="680" y="220" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0kfwswq_di" bpmnElement="cust_depend_iden">
+        <dc:Bounds x="332" y="242" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="321" y="285" width="59" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1wjwk4f_di" bpmnElement="Activity_1n520ti">
+        <dc:Bounds x="680" y="482" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1j3hhun_di" bpmnElement="Activity_1j3hhun">
+        <dc:Bounds x="220" y="350" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1hscp6h_di" bpmnElement="Gateway_1hscp6h" isMarkerVisible="true">
+        <dc:Bounds x="525" y="365" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1f4bdrb_di" bpmnElement="Event_1f4bdrb">
+        <dc:Bounds x="642" y="372" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="622" y="415" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1yeup1d_di" bpmnElement="Event_1yeup1d">
+        <dc:Bounds x="732" y="282" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_09dgyor_di" bpmnElement="Event_09dgyor">
+        <dc:Bounds x="732" y="544" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0iaectm_di" bpmnElement="Flow_0iaectm">
+        <di:waypoint x="750" y="318" />
+        <di:waypoint x="750" y="328" />
+        <di:waypoint x="830" y="328" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1o3ltai_di" bpmnElement="Flow_1o3ltai">
+        <di:waypoint x="750" y="580" />
+        <di:waypoint x="750" y="650" />
+        <di:waypoint x="870" y="650" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1bwnz9j_di" bpmnElement="Flow_FinalDependencyNotFound">
+        <di:waypoint x="575" y="390" />
+        <di:waypoint x="642" y="390" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="532" y="336" width="90" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0wxl65p_di" bpmnElement="Flow_0wxl65p">
+        <di:waypoint x="368" y="260" />
+        <di:waypoint x="680" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1477qka_di" bpmnElement="Flow_1477qka">
+        <di:waypoint x="730" y="300" />
+        <di:waypoint x="730" y="482" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1caxl0r_di" bpmnElement="Flow_1caxl0r">
+        <di:waypoint x="550" y="415" />
+        <di:waypoint x="550" y="500" />
+        <di:waypoint x="680" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0fr91ex_di" bpmnElement="Flow_0fr91ex">
+        <di:waypoint x="680" y="522" />
+        <di:waypoint x="270" y="522" />
+        <di:waypoint x="270" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1vmy7eg_di" bpmnElement="Flow_1vmy7eg">
+        <di:waypoint x="320" y="390" />
+        <di:waypoint x="525" y="390" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

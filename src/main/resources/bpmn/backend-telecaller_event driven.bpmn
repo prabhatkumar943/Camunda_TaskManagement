@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1c80q6i" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.42.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.8.0">
+  <bpmn:process id="backend-telecaller" name="backend-telecaller" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1dsyxwu</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1dsyxwu" sourceRef="StartEvent_1" targetRef="Activity_0qd0c9p" />
+    <bpmn:userTask id="Activity_0qd0c9p" name="Backend create the task for telecaller">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1dsyxwu</bpmn:incoming>
+      <bpmn:outgoing>Flow_1u6v9pc</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateCatchEvent id="Event_1lwcme6">
+      <bpmn:incoming>Flow_1u6v9pc</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ihvgg3</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_17ei2zr" messageRef="Message_2s6uejm" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_1u6v9pc" sourceRef="Activity_0qd0c9p" targetRef="Event_1lwcme6" />
+    <bpmn:userTask id="Activity_05tdp0f" name="Telecaller user complete the task and assign to backendgroup">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0ihvgg3</bpmn:incoming>
+      <bpmn:incoming>Flow_1mk1otm</bpmn:incoming>
+      <bpmn:outgoing>Flow_1bjvma6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0ihvgg3" sourceRef="Event_1lwcme6" targetRef="Activity_05tdp0f" />
+    <bpmn:intermediateCatchEvent id="Event_0x2wiwt">
+      <bpmn:incoming>Flow_1bjvma6</bpmn:incoming>
+      <bpmn:outgoing>Flow_1ext48d</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1rnhjjn" messageRef="Message_1pvps3b" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_1bjvma6" sourceRef="Activity_05tdp0f" targetRef="Event_0x2wiwt" />
+    <bpmn:exclusiveGateway id="Gateway_15nxuap">
+      <bpmn:incoming>Flow_1ext48d</bpmn:incoming>
+      <bpmn:outgoing>Flow_0lm95zw</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1mk1otm</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_1ext48d" sourceRef="Event_0x2wiwt" targetRef="Gateway_15nxuap" />
+    <bpmn:endEvent id="Event_07ttzxo">
+      <bpmn:incoming>Flow_0lm95zw</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0lm95zw" name="No Dependency Found" sourceRef="Gateway_15nxuap" targetRef="Event_07ttzxo">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=if finalDependency=0 then true else false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1mk1otm" name="Dependency Found" sourceRef="Gateway_15nxuap" targetRef="Activity_05tdp0f">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=if finalDependency&gt;1 then true else false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmn:message id="Message_2s6uejm" name="backendFormtask">
+    <bpmn:extensionElements>
+      <zeebe:subscription correlationKey="=businessKey" />
+    </bpmn:extensionElements>
+  </bpmn:message>
+  <bpmn:message id="Message_1pvps3b" name="telecallerForm">
+    <bpmn:extensionElements>
+      <zeebe:subscription correlationKey="=businessKey" />
+    </bpmn:extensionElements>
+  </bpmn:message>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="backend-telecaller">
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="182" y="112" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1auo7jk_di" bpmnElement="Activity_0qd0c9p">
+        <dc:Bounds x="270" y="90" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1lwcme6_di" bpmnElement="Event_1lwcme6">
+        <dc:Bounds x="422" y="112" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_05tdp0f_di" bpmnElement="Activity_05tdp0f">
+        <dc:Bounds x="510" y="90" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0x2wiwt_di" bpmnElement="Event_0x2wiwt">
+        <dc:Bounds x="662" y="112" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_15nxuap_di" bpmnElement="Gateway_15nxuap" isMarkerVisible="true">
+        <dc:Bounds x="755" y="105" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_07ttzxo_di" bpmnElement="Event_07ttzxo">
+        <dc:Bounds x="862" y="112" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1dsyxwu_di" bpmnElement="Flow_1dsyxwu">
+        <di:waypoint x="218" y="130" />
+        <di:waypoint x="270" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1u6v9pc_di" bpmnElement="Flow_1u6v9pc">
+        <di:waypoint x="370" y="130" />
+        <di:waypoint x="422" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ihvgg3_di" bpmnElement="Flow_0ihvgg3">
+        <di:waypoint x="458" y="130" />
+        <di:waypoint x="510" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1mk1otm_di" bpmnElement="Flow_1mk1otm">
+        <di:waypoint x="780" y="105" />
+        <di:waypoint x="610" y="100" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="664" y="85" width="63" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1bjvma6_di" bpmnElement="Flow_1bjvma6">
+        <di:waypoint x="610" y="130" />
+        <di:waypoint x="662" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ext48d_di" bpmnElement="Flow_1ext48d">
+        <di:waypoint x="698" y="130" />
+        <di:waypoint x="755" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lm95zw_di" bpmnElement="Flow_0lm95zw">
+        <di:waypoint x="805" y="130" />
+        <di:waypoint x="862" y="130" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="794" y="112" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

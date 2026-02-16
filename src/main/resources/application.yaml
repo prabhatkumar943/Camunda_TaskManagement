@@ -1,0 +1,78 @@
+#spring.application.name=camundatele
+server:
+  port: 8094
+
+camunda:
+  process:
+    id: backend-telecaller
+    resource: bpmn/backend-telecaller.bpmn
+  client:
+    zeebe:
+      gateway-address: 127.0.0.1:26500
+      #gateway-address: host.docker.internal:26500
+      security:
+        plaintext: true
+    rest:
+      base-url: http://localhost:8088
+  auth:
+    method: oidc
+    oidc:
+      client-id: orchestration
+      client-secret: secret
+      audience: orchestration-api
+      #auth-url: http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token
+      issuer: http://localhost:18080/auth/realms/camunda-platform
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:18080/auth/realms/camunda-platform
+  web:
+    resources:
+      add-mappings: true
+  mvc:
+    log-request-details: true
+
+  #datasource:
+    #url: jdbc:postgresql://localhost:5432/Test-telecaller
+    #username: postgres
+    #password: password
+    #driver-class-name: org.postgresql.Driver
+
+  #hikari:
+    #pool-name: HikariPool-Postgres
+    #maximum-pool-size: 10
+    #minimum-idle: 2
+    #idle-timeout: 30000
+    #connection-timeout: 30000
+    #max-lifetime: 1800000
+    #auto-commit: true
+
+  #jpa:
+    #database-platform: org.hibernate.dialect.PostgreSQLDialect
+    #show-sql: true
+    #hibernate:
+      #ddl-auto: update
+    #properties:
+      #hibernate:
+        #format_sql: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      #password: 123
+logging:
+  level:
+    root: INFO
+    io.netty.resolver.dns: DEBUG
+    io.camunda.client: DEBUG
+    org.camunda: DEBUG
+    org.zeebe: DEBUG
+    org.springframework.security: DEBUG
+    io.camunda.client.impl.oauth: DEBUG
+    org.springframework.security.oauth2.client: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.boot.autoconfigure.web.servlet.error: DEBUG
