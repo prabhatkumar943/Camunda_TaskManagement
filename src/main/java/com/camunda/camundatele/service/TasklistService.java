@@ -9,6 +9,7 @@ import com.camunda.camundatele.exception.ForBiddenException;
 import com.camunda.camundatele.exception.ResourceNotFoundException;
 //import com.camunda.camundatele.repository.UserFormDataRepository;
 //import com.camunda.camundatele.repository.UserTaskRepository;
+import com.camunda.camundatele.utils.ProcessProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.client.CamundaClient;
 import io.camunda.client.api.response.ActivatedJob;
@@ -53,11 +54,11 @@ public class TasklistService {
 
     private final ModelMapper modelMapper;
     private final WebClient webClient;
-    @Autowired
-    private  CamundaClientConfig camundaClientConfig;
-    private CamundaClient camundaClient;
-    private final String taslkListUrl="http://localhost:8088";
-
+    //@Autowired
+    //private  CamundaClientConfig camundaClientConfig;
+    private final CamundaClient camundaClient;
+   // private final String taslkListUrl="http://localhost:8088";
+    private final ProcessProperties properties;
     //private final TasklistWebClient tasklistWebClient;
     //private final AuthController tokenProvider;
 
@@ -67,10 +68,12 @@ public class TasklistService {
 
 
     @Autowired
-    public TasklistService(WebClient webClient, ModelMapper modelMapper) {
+    public TasklistService(WebClient webClient, ModelMapper modelMapper, CamundaClient camundaClient, ProcessProperties properties) {
         this.webClient=webClient;
        // this.userFormDataRepository=userFormDataRepository;
         this.modelMapper=modelMapper;
+        this.camundaClient=camundaClient;
+        this.properties=properties;
         //this.userTaskRepository=userTaskRepository;
 
     }
@@ -83,7 +86,7 @@ public class TasklistService {
         token=fetchToken();
         return
                 webClient.post()
-                        .uri(taslkListUrl+ "/v1/tasks/search")
+                        .uri(properties.getCAMUNDA_REST_ADDRESS()+ "/v1/tasks/search")
                         .header("Authorization", token != null ? "Bearer " + token : "")
                         .bodyValue(Map.of("processName", processName))
                         .retrieve()
@@ -100,7 +103,7 @@ public class TasklistService {
         token=fetchToken();
         return
                 webClient.post()
-                        .uri(taslkListUrl+ "/v1/tasks/search")
+                        .uri(properties.getCAMUNDA_REST_ADDRESS()+ "/v1/tasks/search")
                         .header("Authorization", token != null ? "Bearer " + token : "")
                         .bodyValue(Map.of("id", taskId))
                         .retrieve()
@@ -111,7 +114,7 @@ public class TasklistService {
         //         .block();
     }
 
-    public ResponseEntity<Map<String,Object>> completeTask(String taskId, Map<String, Object> variables, HttpServletRequest request) {
+/*    public ResponseEntity<Map<String,Object>> completeTask(String taskId, Map<String, Object> variables, HttpServletRequest request) {
         logger.info("complete task is called with varilables" + variables);
         String token = null;
         token=fetchAssignAndCompleteTask(variables.get("username").toString(),variables.get("password").toString());
@@ -199,7 +202,7 @@ public class TasklistService {
             //throw new RuntimeException("Failed to assign the task",e);
                     return ResponseEntity.status(500).body(Map.of("msg","Failure","payload",null));
         }
-    }
+    }*/
 
     public List<List<TaskDto>> fetchTaskByProcessInstanceKey(String processInstanceKey) {
         logger.info("fetchTaskByProcessInstanceId is called with request " + processInstanceKey);
@@ -208,7 +211,7 @@ public class TasklistService {
         try {
             return
                     webClient.post()
-                            .uri(taslkListUrl + "/v2/user-tasks/search")
+                            .uri(properties.getCAMUNDA_REST_ADDRESS() + "/v2/user-tasks/search")
                             .header("Authorization", token != null ? "Bearer " + token : "")
                           //  .bodyValue(Map.of("processInstanceKey", processInstanceKey))
                             .bodyValue(Map.of(
@@ -237,7 +240,7 @@ public class TasklistService {
 
             return
                     webClient.post()
-                            .uri(taslkListUrl + "/v2/user/search")
+                            .uri(properties.getCAMUNDA_REST_ADDRESS() + "/v1/tasks/search")
                             .header("Authorization", token != null ? "Bearer " + token : "")
                             .bodyValue(userRequest)
                             .retrieve()
@@ -260,7 +263,7 @@ public class TasklistService {
 
             return
                     webClient.post()
-                            .uri(taslkListUrl + "/v2/user-tasks/search")
+                            .uri(properties.getCAMUNDA_REST_ADDRESS() + "/v2/user-tasks/search")
                             .header("Authorization", token != null ? "Bearer " + token : "")
                             .bodyValue(Map.of("filter", userRequest))
                             .retrieve()
@@ -281,8 +284,8 @@ public class TasklistService {
                             //.bodyToMono(new ParameterizedTypeReference<List<Map<String,Object>>>() {
                             //.bodyToMono(new ParameterizedTypeReference<Map<String,Object>>() {
                             //});
-                            .bodyToMono(Map.class) // Receive as a generic Map first
-                            .retryWhen(Retry.backoff(3, Duration.ofSeconds(2)));
+                            .bodyToMono(Map.class); // Receive as a generic Map first
+                            //.retryWhen(Retry.backoff(3, Duration.ofSeconds(2)));
             //.map(responseMap -> {
             // 'content' is a common name, check your API docs if it's 'tasks' or 'data'
             // return (List<Map<String, Object>>) responseMap.get("content");
@@ -291,7 +294,7 @@ public class TasklistService {
             //.map(response -> response.g);
         } catch (Exception e) {
             logger.error("Failed to fetch search task : {}", e.getMessage());
-            throw new RuntimeException(e);
+            throw e;
         }
     }
 
@@ -301,12 +304,12 @@ public class TasklistService {
 
         Map<String, String> response =
                 webClient.post()
-                        .uri("http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token")
+                        .uri(properties.getCAMUNDA_AUTH_URL())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .bodyValue("grant_type=client_credentials" +
-                                "&client_id=orchestration" +
-                                "&client_secret=secret"+
-                                "&audience=orchestration-api")
+                                "&client_id=" +properties.getCAMUNDA_CLIENT_ID()+
+                                "&client_secret="+properties.getCAMUNDA_CLIENT_SECRET()+
+                                "&audience="+properties.getCAMUNDA_AUDIENCE())
                         .retrieve()
                         .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
                         .block();
@@ -316,7 +319,7 @@ public class TasklistService {
         return token;
     }
 
-   public String fetchAssignAndCompleteTask(String userName,String password){
+/*   public String fetchAssignAndCompleteTask(String userName,String password){
 
         String token=null;
         //String userName="test";
@@ -337,13 +340,13 @@ public class TasklistService {
         token = response.get("access_token");
 
         return token;
-    }
+    }*/
 
 
     public ResponseEntity<Map<String, String>> sendFormDataToCamunda(Map<String, Object> data)
     {
         try{
-            camundaClient=new CamundaClientConfig().camundaClient();
+            //camundaClient=new CamundaClientConfig().camundaClient();
             camundaClient.newPublishMessageCommand()
                     .messageName(data.get("name").toString())
                     .correlationKey(data.get("businessKey").toString())
@@ -389,11 +392,11 @@ public class TasklistService {
     public ResponseEntity<Map<String, String>> taskAssignTo(Map<String, Object> data)
     {
         try{
-            camundaClient=new CamundaClientConfig().camundaClient();
+            //camundaClient=new CamundaClientConfig().camundaClient();
             camundaClient.newAssignUserTaskCommand((Long.parseLong(data.get("userTaskKey").toString())))
                     .assignee(data.get("agentName").toString())
                     .send();
-            camundaClient.close();
+            //camundaClient.close();
             /*this.userTaskRepository.findById(data.get("userTaskKey").toString())
                     .ifPresentOrElse(
                             existingForm->{
@@ -418,11 +421,11 @@ public class TasklistService {
     {
         logger.info("complete task request "+data);
         try{
-            camundaClient=new CamundaClientConfig().camundaClient();
+            //camundaClient=new CamundaClientConfig().camundaClient();
             camundaClient.newCompleteUserTaskCommand((Long.parseLong(data.get("userTaskKey").toString())))
                     .variables(data.get("variables")).send();
 
-            camundaClient.close();
+            //camundaClient.close();
      /*       this.userTaskRepository.findById(data.get("userTaskKey").toString())
                     .ifPresentOrElse(
                             existingForm->{
@@ -454,17 +457,17 @@ public class TasklistService {
                             }
                     );*/
 
-            return ResponseEntity.status(200).body(Map.of("mesg","success","desc","Assined Task "+data.get("userTaskKey") + " completed"));
+            return ResponseEntity.status(200).body(Map.of("mesg","success","desc","Assined Task "+data.get("userTaskKey") + " successfully completed"));
         } catch (Exception e) {
             //throw new RuntimeException(e);
-            return ResponseEntity.status(500).body(Map.of("mesg","failed","desc","Assigned Task "+data.get("userTaskKey") + " completed"));
+            return ResponseEntity.status(500).body(Map.of("mesg","failed","desc","Assigned Task "+data.get("userTaskKey") + " not completed"));
         }
     }
 
     public ResponseEntity<Map<String, List>> filterTaskClient(Map<String, Object> data)
     {
         try{
-            camundaClient=new CamundaClientConfig().camundaClient();
+            //camundaClient=new CamundaClientConfig().camundaClient();
 
 //            String jsonValue = String.format("\"%s\"", userId);
 

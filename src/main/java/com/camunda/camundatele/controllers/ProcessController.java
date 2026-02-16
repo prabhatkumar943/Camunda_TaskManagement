@@ -3,6 +3,7 @@ package com.camunda.camundatele.controllers;
 //import com.camunda.camundatele.utils.BpmnDeployer;
 import com.camunda.camundatele.dtos.TaskDto;
 //import com.camunda.camundatele.entities.UserTask;
+import com.camunda.camundatele.exception.ResourceNotFoundException;
 import com.camunda.camundatele.service.TasklistService;
 import com.camunda.camundatele.config.CamundaClientConfig;
 //import com.camunda.camundatele.service.UserTaskService;
@@ -43,17 +44,22 @@ public class ProcessController {
     private final ServiceJobWorker serviceJobWorker;
     @Autowired
     private TasklistService tasklistService;
+
+
+   // private final CamundaClientConfig camundaClientConfig;
+   //private final CamundaClient camundaClient;
     //@Autowired
     //private CamundaClientConfig camundaClient;
     /*public ProcessController(CamundaClientConfig camundaClient) {
         this.camundaClient = camundaClient;
     }*/
 
-    public ProcessController( ModelMapper modelMapper, ServiceJobWorker serviceJobWorker)
+    public ProcessController( ModelMapper modelMapper, ServiceJobWorker serviceJobWorker, CamundaClient camundaClient)
     {
 //        this.userTaskService=userTaskService;
         this.modelMapper=modelMapper;
         this.serviceJobWorker= serviceJobWorker;
+        this.camundaClient= camundaClient;
     }
     @Autowired
     private ProcessProperties processProperties;
@@ -77,8 +83,8 @@ public class ProcessController {
                     //custDependecy=variables.get("custDependency").toString();
                     //variables.put("businessKey", UUID.randomUUID().toString());
                     //if(Integer.parseInt(custDependecy)>0) {
-                        camundaClient = new CamundaClientConfig().camundaClient();
-
+                        //camundaClient = new CamundaClientConfig().camundaClient();
+                    //camundaClient = camundaClientConfig.camundaClient();
                      /*   camundaClient.newDeployResourceCommand()
                                 //.addResourceFile("E:\\Java\\backend-telecaller.bpmn")
                                 //.addResourceFile()
@@ -132,7 +138,7 @@ public class ProcessController {
                  //logger.info("task created when process instance is called"+ task);
                 }
                 else{
-                    camundaClient = new CamundaClientConfig().camundaClient();
+                    //camundaClient = new CamundaClientConfig().camundaClient();
                      event=  camundaClient.newCreateInstanceCommand()
                             .bpmnProcessId("backend-telecaller")   // must match the ID in your BPMN XML
                             //.re
@@ -301,20 +307,20 @@ public class ProcessController {
         }
     }
 
-    @PostMapping("/tasks/{taskId}/complete")
-    public ResponseEntity<Map<String,Object>> completeTask(@PathVariable String taskId,
-                                               @RequestBody Map<String, Object> variables, HttpServletRequest request) {
+    //@PostMapping("/tasks/{taskId}/complete")
+    //public ResponseEntity<Map<String,Object>> completeTask(@PathVariable String taskId,
+      //                                         @RequestBody Map<String, Object> variables, HttpServletRequest request) {
 //        try {
-            ResponseEntity<Map<String,Object>> entity  =tasklistService.completeTask(taskId, variables, request);
-            return entity;
+           // ResponseEntity<Map<String,Object>> entity  =tasklistService.completeTask(taskId, variables, request);
+            //return entity;
   //      }
     ///    catch (Exception e){
             //throw new RuntimeException("Failed to complete task",e);
        //     return ResponseEntity.ok().body("Task " + taskId + " not completed successfully");
         //}
-    }
+    //}
 
-    @PostMapping("/tasks/{taskId}/assign")
+/*    @PostMapping("/tasks/{taskId}/assign")
     public ResponseEntity<Map<String,Object>> assignTask(@PathVariable String taskId,
                                              @RequestBody Map<String, Object> variables, HttpServletRequest request) {
         //try {
@@ -324,7 +330,7 @@ public class ProcessController {
         //catch (Exception e){
           //  return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Task "+ taskId +" not completed");
         //}
-    }
+    }*/
 
     @PostMapping("/tasks/form-submit")
     public ResponseEntity<Map<String,String>> submitForm(@RequestBody Map<String,Object> data){
@@ -359,6 +365,8 @@ public class ProcessController {
                 keys.add(item.path("userTaskKey").asText());
             }
         }*/
+
+
         String userTaskKey = task
                 .map(response -> {
                     List<Map<String, Object>> items =
@@ -367,9 +375,13 @@ public class ProcessController {
                     if (items != null && !items.isEmpty()) {
                         return (String) items.get(0).get("userTaskKey");
                     }
-                    return null;
+                    return "";
                 })
                 .block();
+        if(userTaskKey.equals("")){
+            //return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("msg","Failure", "❌ Failed to complete task ", "No active user task found for the given process instance key"));
+            throw new ResourceNotFoundException("No active user task found for the given process instance key"+processInstanceKey);
+        }
         data.put("userTaskKey",userTaskKey);
 
         return     tasklistService.completeTask(data);

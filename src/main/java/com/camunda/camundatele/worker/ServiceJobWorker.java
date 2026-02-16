@@ -33,9 +33,11 @@ public class ServiceJobWorker {
 //    public Long processDefinitionKey=null;
   //  public Long uTaskKey=null;
     //private final RedisService redisService;
-    public ServiceJobWorker(){
+    private final CamundaClient camundaClient;
+    public ServiceJobWorker(CamundaClient camundaClient){
         //this.userTaskService=userTaskService;
 //        this.redisService=redisService;
+        this.camundaClient=camundaClient;
     }
     /*private final CamundaClient camundaClient;
     public MyJobWorker(CamundaClient camundaClient) {
@@ -89,14 +91,14 @@ public class ServiceJobWorker {
     @PostConstruct
     public void startWorker() {
 
-        CamundaClient client = new CamundaClientConfig().camundaClient();
+        //CamundaClient client = new CamundaClientConfig().camundaClient();
                 /*CamundaClient.newClientBuilder()
                 .grpcAddress(URI.create("http://localhost:26500"))
                 .restAddress(URI.create("http://localhost:8088"))
                 //.usePlaintext()
                 .build();*/
 
-        client.newWorker()
+/*        client.newWorker()
                 .jobType("check-dependency")
                 .handler(this::handle)
                 .open();
@@ -105,13 +107,13 @@ public class ServiceJobWorker {
                 .jobType("check-finalDependency")
                 .handler(this::handleFinalDependency)
                 .open();
-
-        client.newWorker()
+*/
+        camundaClient.newWorker()
                 .jobType("task-persist-listener")
                 .handler(this::handlTaskPersistListener)
                 .open();
 
-        client.newWorker()
+        camundaClient.newWorker()
                 .jobType("send-notification")
                 .handler(this::handleSendNotification)
                 .open();
